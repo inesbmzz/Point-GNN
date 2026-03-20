@@ -1,17 +1,17 @@
-# Point-GNN — Reproduction Study
+# Point-GNN:Reproduction Study
 
-> **NPM3D Project — Master IASD, March 2026**
+> **NPM3D Project:Master IASD, March 2026**
 >
 > This fork reproduces the results of Point-GNN (CVPR 2020) on the KITTI benchmark,
 > performs an ablation study, and evaluates cross-dataset generalization on nuScenes mini.
 >
 > **Key results:**
-> - Reproduced KITTI val Car 3D AP: 87.88 / 78.34 / 77.39 (Easy / Moderate / Hard) — matching paper numbers to within rounding error
+> - Reproduced KITTI val Car 3D AP: 87.88 / 78.34 / 77.39 (Easy / Moderate / Hard):matching paper numbers to within rounding error
 > - Ablation study fully reproduced (box merge, box score, auto-registration)
-> - Zero detections on nuScenes 32-beam data — confirming sensor-specific training dependency
+> - Zero detections on nuScenes 32-beam data:confirming sensor-specific training dependency
 >
 > **Added scripts:**
-> - [`visualize_results.py`](visualize_results.py) — headless visualization (no display needed). Outputs camera images, BEV PNGs, PLY files for CloudCompare, and interactive HTML. See [VISUALIZE_GUIDE.md](VISUALIZE_GUIDE.md) for usage.
+> - [`visualize_results.py`](visualize_results.py):headless visualization (no display needed). Outputs camera images, BEV PNGs, PLY files for CloudCompare, and interactive HTML. See [VISUALIZE_GUIDE.md](VISUALIZE_GUIDE.md) for usage.
 
 ---
 
@@ -25,7 +25,7 @@ nuScenes dataset by converting it to KITTI format.
 > density compared to KITTI's 64-beam sensor. This is documented as a generalization
 > failure in our report.
 
-### 1 — Install nuscenes-devkit
+### 1:Install nuscenes-devkit
 
 ```bash
 pip install nuscenes-devkit --no-deps
@@ -33,7 +33,7 @@ pip install nuscenes-devkit --no-deps
 
 `--no-deps` avoids reinstalling packages you already have.
 
-### 2 — Download nuScenes mini
+### 2:Download nuScenes mini
 
 Register and download from [https://www.nuscenes.org/download](https://www.nuscenes.org/download).
 Select **nuScenes mini** (~4 GB). Extract to a folder, e.g. `/data/nuscenes/`.
@@ -47,7 +47,7 @@ The extracted structure should be:
 └── v1.0-mini/
 ```
 
-### 3 — Fix the export script
+### 3:Fix the export script
 
 The installed `export_kitti.py` has a bug where `dataroot` is not passed to the
 `NuScenes` constructor. Find and fix it:
@@ -61,7 +61,7 @@ python3 -c "import nuscenes; print(nuscenes.__file__)"
 #   self.nusc = NuScenes(version=nusc_version, dataroot=dataroot)
 ```
 
-### 4 — Convert nuScenes mini to KITTI format
+### 4:Convert nuScenes mini to KITTI format
 
 ```bash
 python3 -m nuscenes.scripts.export_kitti nuscenes_gt_to_kitti \
@@ -71,7 +71,7 @@ python3 -m nuscenes.scripts.export_kitti nuscenes_gt_to_kitti \
     --split mini_val
 ```
 
-### 5 — Rename UUID filenames to sequential numbers
+### 5:Rename UUID filenames to sequential numbers
 
 nuScenes exports files with UUID names; Point-GNN expects sequential 6-digit names:
 
@@ -101,7 +101,7 @@ print(f"Done: {len(stems)} frames")
 EOF
 ```
 
-### 6 — Set up the directory structure
+### 6:Set up the directory structure
 
 Point-GNN expects a specific directory layout. Create symlinks to match it:
 
@@ -121,7 +121,7 @@ ln -s $SRC/label_2/*  $BASE/labels/training/label_2/
 ln -s $SRC/image_2/*  $BASE/image/training/image_2/
 ```
 
-### 7 — Run inference
+### 7:Run inference
 
 ```bash
 python3 run.py checkpoints/car_auto_T3_train/ \
@@ -130,7 +130,7 @@ python3 run.py checkpoints/car_auto_T3_train/ \
     --output_dir results/car_nuscenes_mini/
 ```
 
-### 8 — Evaluate
+### 8:Evaluate
 
 ```bash
 ./kitti_native_evaluation/evaluate_object_offline \
