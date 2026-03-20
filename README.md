@@ -15,6 +15,131 @@
 
 ---
 
+## Cross-Dataset Evaluation on nuScenes
+
+This section explains how to evaluate the pretrained Point-GNN checkpoint on the
+nuScenes dataset by converting it to KITTI format.
+
+> **Note:** Our experiment shows that the model produces **zero detections** on
+> nuScenes 32-beam data without retraining, due to the 7× reduction in point
+> density compared to KITTI's 64-beam sensor. This is documented as a generalization
+> failure in our report.
+
+### 1 — Install nuscenes-devkit
+
+```bash
+pip install nuscenes-devkit --no-deps
+```
+
+`--no-deps` avoids reinstalling packages you already have.
+
+### 2 — Download nuScenes mini
+
+Register and download from [https://www.nuscenes.org/download](https://www.nuscenes.org/download).
+Select **nuScenes mini** (~4 GB). Extract to a folder, e.g. `/data/nuscenes/`.
+
+The extracted structure should be:
+```
+/data/nuscenes/
+├── maps/
+├── samples/
+├── sweeps/
+└── v1.0-mini/
+```
+
+### 3 — Fix the export script
+
+The installed `export_kitti.py` has a bug where `dataroot` is not passed to the
+`NuScenes` constructor. Find and fix it:
+
+```bash
+# Find the installed script
+python3 -c "import nuscenes; print(nuscenes.__file__)"
+# Navigate to nuscenes/scripts/export_kitti.py and find the line:
+#   self.nusc = NuScenes(version=nusc_version)
+# Replace with:
+#   self.nusc = NuScenes(version=nusc_version, dataroot=dataroot)
+```
+
+### 4 — Convert nuScenes mini to KITTI format
+
+```bash
+python3 -m nuscenes.scripts.export_kitti nuscenes_gt_to_kitti \
+    --nusc_version v1.0-mini \
+    --nusc_kitti_dir /data/nuscenes_kitti/ \
+    --dataroot /data/nuscenes/ \
+    --split mini_val
+```
+
+### 5 — Rename UUID filenames to sequential numbers
+
+nuScenes exports files with UUID names; Point-GNN expects sequential 6-digit names:
+
+```bash
+python3 - <<'EOF'
+import os, glob
+
+src = "/data/nuscenes_kitti/mini_val"
+subdirs = {"velodyne": ".bin", "image_2": ".png", "label_2": ".txt", "calib": ".txt"}
+
+bins = sorted(glob.glob(os.path.join(src, "velodyne", "*.bin")))
+stems = [os.path.splitext(os.path.basename(b))[0] for b in bins]
+
+for subdir, ext in subdirs.items():
+    for i, stem in enumerate(stems):
+        s = os.path.join(src, subdir, stem + ext)
+        d = os.path.join(src, subdir, f"{i:06d}" + ext)
+        if os.path.exists(s) and not os.path.exists(d):
+            os.rename(s, d)
+
+split = "/data/nuscenes_kitti/3DOP_splits/mini_val.txt"
+os.makedirs(os.path.dirname(split), exist_ok=True)
+with open(split, "w") as f:
+    f.writelines(f"{i:06d}\n" for i in range(len(stems)))
+
+print(f"Done: {len(stems)} frames")
+EOF
+```
+
+### 6 — Set up the directory structure
+
+Point-GNN expects a specific directory layout. Create symlinks to match it:
+
+```bash
+BASE=/data/nuscenes_kitti
+SRC=$BASE/mini_val
+
+mkdir -p $BASE/calib/training/calib
+mkdir -p $BASE/velodyne/training/velodyne
+mkdir -p $BASE/labels/training/label_2
+mkdir -p $BASE/image/training/image_2
+mkdir -p $BASE/3DOP_splits
+
+ln -s $SRC/calib/*    $BASE/calib/training/calib/
+ln -s $SRC/velodyne/* $BASE/velodyne/training/velodyne/
+ln -s $SRC/label_2/*  $BASE/labels/training/label_2/
+ln -s $SRC/image_2/*  $BASE/image/training/image_2/
+```
+
+### 7 — Run inference
+
+```bash
+python3 run.py checkpoints/car_auto_T3_train/ \
+    --dataset_root_dir /data/nuscenes_kitti/ \
+    --dataset_split_file /data/nuscenes_kitti/3DOP_splits/mini_val.txt \
+    --output_dir results/car_nuscenes_mini/
+```
+
+### 8 — Evaluate
+
+```bash
+./kitti_native_evaluation/evaluate_object_offline \
+    /data/nuscenes_kitti/labels/training/label_2/ \
+    results/car_nuscenes_mini/
+```
+
+---
+
 # Point-GNN (Original)
 
 This repository contains a reference implementation of our [Point-GNN: Graph Neural Network for 3D Object Detection in a Point Cloud](http://openaccess.thecvf.com/content_CVPR_2020/papers/Shi_Point-GNN_Graph_Neural_Network_for_3D_Object_Detection_in_a_CVPR_2020_paper.pdf), CVPR 2020.
