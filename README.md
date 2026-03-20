@@ -1,6 +1,23 @@
-# Point-GNN
+# Point-GNN — Reproduction Study
 
-This repository contains a reference implementation of our [Point-GNN: Graph Neural Network for 3D Object Detection in a Point Cloud](http://openaccess.thecvf.com/content_CVPR_2020/papers/Shi_Point-GNN_Graph_Neural_Network_for_3D_Object_Detection_in_a_CVPR_2020_paper.pdf), CVPR 2020. 
+> **NPM3D Project — Master IASD, March 2026**
+>
+> This fork reproduces the results of Point-GNN (CVPR 2020) on the KITTI benchmark,
+> performs an ablation study, and evaluates cross-dataset generalization on nuScenes mini.
+>
+> **Key results:**
+> - Reproduced KITTI val Car 3D AP: 87.88 / 78.34 / 77.39 (Easy / Moderate / Hard) — matching paper numbers to within rounding error
+> - Ablation study fully reproduced (box merge, box score, auto-registration)
+> - Zero detections on nuScenes 32-beam data — confirming sensor-specific training dependency
+>
+> **Added scripts:**
+> - [`visualize_results.py`](visualize_results.py) — headless visualization (no display needed). Outputs camera images, BEV PNGs, PLY files for CloudCompare, and interactive HTML. See [VISUALIZE_GUIDE.md](VISUALIZE_GUIDE.md) for usage.
+
+---
+
+# Point-GNN (Original)
+
+This repository contains a reference implementation of our [Point-GNN: Graph Neural Network for 3D Object Detection in a Point Cloud](http://openaccess.thecvf.com/content_CVPR_2020/papers/Shi_Point-GNN_Graph_Neural_Network_for_3D_Object_Detection_in_a_CVPR_2020_paper.pdf), CVPR 2020.
 
 If you find this code useful in your research, please consider citing our work:
 ```
